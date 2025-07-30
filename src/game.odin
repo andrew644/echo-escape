@@ -11,8 +11,12 @@ run: bool
 camera: rl.Camera
 player: Player
 
+
+enemies: [dynamic]Enemy
+
 Player :: struct {
-	pos: rl.Vector3,
+	pos:    rl.Vector3,
+	health: i32,
 }
 
 init :: proc() {
@@ -23,15 +27,27 @@ init :: proc() {
 	rl.SetTargetFPS(60)
 
 	player.pos = player_pos_start
+	player.health = 100
 
 	set_player_pos(player_pos_start)
 	camera.up = {0, 1, 0}
 	camera.fovy = 90
 	camera.projection = rl.CameraProjection.PERSPECTIVE
 
+	spawn_enemy(rl.Vector3({0, 0, 10}))
+	spawn_enemy(rl.Vector3({5, 0, 10}))
 }
 
 update :: proc() {
+	delta_t := rl.GetFrameTime()
+	draw()
+	controls(delta_t)
+	move_enemies(delta_t)
+
+	free_all(context.temp_allocator)
+}
+
+draw :: proc() {
 	rl.BeginDrawing()
 	{
 		rl.ClearBackground({33, 33, 200, 255})
@@ -40,29 +56,42 @@ update :: proc() {
 		{
 			rl.DrawGrid(70, 10)
 			rl.DrawPlane(rl.Vector3(0), {10, 10}, rl.WHITE)
-			rl.DrawCube(player.pos + rl.Vector3({0, 1, 0}), 2, 2, 2, rl.GRAY)
+			rl.DrawCapsule(player.pos, player.pos + rl.Vector3({0, 3, 0}), 1, 10, 10, rl.BLACK)
+
+			for e in enemies {
+				rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
+			}
 		}
 		rl.EndMode3D()
 
 		rl.DrawFPS(10, 10)
 	}
 	rl.EndDrawing()
+}
 
-	delta_t := rl.GetFrameTime()
+controls :: proc(delta_t: f32) {
 	new_pos := player.pos
+	direction: rl.Vector3 = rl.Vector3(0)
 	if rl.IsKeyDown(.W) {
-		new_pos.z -= move_speed * delta_t
-	} else if rl.IsKeyDown(.S) {
-		new_pos.z += move_speed * delta_t
+		direction.z -= 1
 	}
 	if rl.IsKeyDown(.A) {
-		new_pos.x -= move_speed * delta_t
-	} else if rl.IsKeyDown(.D) {
-		new_pos.x += move_speed * delta_t
+		direction.x -= 1
 	}
-	set_player_pos(new_pos)
+	if rl.IsKeyDown(.S) {
+		direction.z += 1
+	}
+	if rl.IsKeyDown(.D) {
+		direction.x += 1
+	}
 
-	free_all(context.temp_allocator)
+	if rl.Vector3Length(direction) > 0 {
+		direction = rl.Vector3Normalize(direction)
+	}
+
+	new_pos.x += direction.x * move_speed * delta_t
+	new_pos.z += direction.z * move_speed * delta_t
+	set_player_pos(new_pos)
 }
 
 set_player_pos :: proc(pos: rl.Vector3) {
