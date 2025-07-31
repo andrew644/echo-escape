@@ -63,6 +63,8 @@ update :: proc() {
 	move_enemies(delta_t)
 	enemy_player_collision()
 	attack_cooldown_enemies(delta_t)
+	process_bullets(delta_t)
+	remove_dead_enemies()
 
 	free_all(context.temp_allocator)
 }
@@ -88,6 +90,9 @@ draw :: proc() {
 			for e in enemies {
 				rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
 			}
+			for b in bullets {
+				rl.DrawSphere(b.pos, b.radius, rl.RED)
+			}
 		}
 		rl.EndMode3D()
 
@@ -103,16 +108,16 @@ draw :: proc() {
 controls :: proc(delta_t: f32) {
 	new_pos := player.pos
 	direction: rl.Vector3 = rl.Vector3(0)
-	if rl.IsKeyDown(.W) {
+	if rl.IsKeyDown(.W) || rl.IsKeyDown(.UP) {
 		direction.z -= 1
 	}
-	if rl.IsKeyDown(.A) {
+	if rl.IsKeyDown(.A) || rl.IsKeyDown(.LEFT) {
 		direction.x -= 1
 	}
-	if rl.IsKeyDown(.S) {
+	if rl.IsKeyDown(.S) || rl.IsKeyDown(.DOWN) {
 		direction.z += 1
 	}
-	if rl.IsKeyDown(.D) {
+	if rl.IsKeyDown(.D) || rl.IsKeyDown(.RIGHT) {
 		direction.x += 1
 	}
 

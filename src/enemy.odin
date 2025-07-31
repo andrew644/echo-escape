@@ -2,6 +2,7 @@ package game
 
 import "core:math"
 import "core:math/rand"
+import "core:slice"
 import rl "vendor:raylib"
 
 max_enemies: i32 = 100
@@ -21,6 +22,7 @@ Enemy :: struct {
 	pos:             rl.Vector3,
 	health:          i32,
 	speed:           f32,
+	radius:          f32,
 	type:            EnemyType,
 	attack_cooldown: f32,
 }
@@ -29,16 +31,24 @@ spawn_enemy :: proc(type: EnemyType) {
 	spawn_enemy_r(type, enemy_spawn_distance)
 }
 
-spawn_enemy_r :: proc(type: EnemyType, radius: f32) {
+spawn_enemy_r :: proc(type: EnemyType, distance_from_player: f32) {
 	if i32(len(enemies)) >= max_enemies {
 		return
 	}
 
+	radius: f32
+	switch type {
+	case .Box:
+		radius = cube_enemy_radius
+	case .Sphere:
+		radius = sphere_enemy_radius
+	}
 	e: Enemy
 	e.health = 10
-	e.pos = random_point_circle(player.pos, radius)
+	e.pos = random_point_circle(player.pos, distance_from_player)
 	e.type = type
 	e.speed = 2.5
+	e.radius = radius
 	e.attack_cooldown = 0
 
 	append(&enemies, e)
@@ -75,22 +85,34 @@ attack_cooldown_enemies :: proc(delta_t: f32) {
 
 enemy_player_collision :: proc() {
 	player_pos: rl.Vector2 = player.pos.xz
-	enemy_radius: f32
 	for &e in enemies {
 		if e.attack_cooldown > 0 {
 			continue
 		}
 
-		switch e.type {
-		case .Box:
-			enemy_radius = cube_enemy_radius
-		case .Sphere:
-			enemy_radius = sphere_enemy_radius
-		}
-		collision := rl.CheckCollisionCircles(player_pos, player_radius, e.pos.xz, enemy_radius)
+		collision := rl.CheckCollisionCircles(player_pos, player_radius, e.pos.xz, e.radius)
 		if collision {
 			player.health -= enemy_attack_damage
 			e.attack_cooldown = enemy_attack_cooldown
 		}
+	}
+}
+
+remove_dead_enemies :: proc() {
+	enemies_to_remove := make(map[int]int, context.temp_allocator)
+
+	for e, index in enemies {
+		if e.health <= 0 {
+			enemies_to_remove[index] = index
+		}
+	}
+
+	sorted_remove := make([dynamic]int, context.temp_allocator)
+	for k, _ in enemies_to_remove {
+		append(&sorted_remove, k)
+	}
+	slice.reverse_sort(sorted_remove[:])
+	for r in sorted_remove {
+		unordered_remove(&enemies, r)
 	}
 }

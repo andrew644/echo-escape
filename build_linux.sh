@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -eu
+#!/usr/bin/env bash
 
 OUT="out/linux"
 mkdir -p $OUT

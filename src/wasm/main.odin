@@ -1,20 +1,20 @@
 package game_wasm
 
+import game ".."
 import "base:runtime"
 import "core:c"
-import "core:mem"
 import "core:log"
-import game ".."
+import "core:mem"
 
-@(private="file")
+@(private = "file")
 web_context: runtime.Context
 
-@export
+@(export)
 main_start :: proc "c" () {
 	context = runtime.default_context()
 
 	context.allocator = emscripten_allocator()
-	runtime.init_global_temporary_allocator(1*mem.Megabyte)
+	runtime.init_global_temporary_allocator(5 * mem.Megabyte)
 
 	context.logger = log.create_console_logger()
 
@@ -23,20 +23,20 @@ main_start :: proc "c" () {
 	game.init()
 }
 
-@export
+@(export)
 main_update :: proc "c" () -> bool {
 	context = web_context
 	game.update()
 	return game.should_run()
 }
 
-@export
+@(export)
 main_end :: proc "c" () {
 	context = web_context
 	game.shutdown()
 }
 
-@export
+@(export)
 web_window_size_changed :: proc "c" (width: c.int, height: c.int) {
 	context = web_context
 	game.parent_window_size_changed(int(width), int(height))
