@@ -1,11 +1,13 @@
 package game
 
 import "core:c"
+import "core:strconv"
 import rl "vendor:raylib"
 
-move_speed: f32 : 5
-camera_pos_offset: rl.Vector3 : {0, 20, 11}
+camera_pos_offset: rl.Vector3 : {0, 20, 9}
 player_pos_start: rl.Vector3 : {0, 0, 0}
+player_radius: f32 : 1
+player_move_speed: f32 : 5
 
 run: bool
 camera: rl.Camera
@@ -34,8 +36,24 @@ init :: proc() {
 	camera.fovy = 90
 	camera.projection = rl.CameraProjection.PERSPECTIVE
 
-	spawn_enemy(rl.Vector3({0, 0, 10}))
-	spawn_enemy(rl.Vector3({5, 0, 10}))
+	spawn_enemy_r(.Box, 30)
+	spawn_enemy_r(.Box, 20)
+	spawn_enemy_r(.Box, 40)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
+	spawn_enemy(.Box)
 }
 
 update :: proc() {
@@ -43,6 +61,8 @@ update :: proc() {
 	draw()
 	controls(delta_t)
 	move_enemies(delta_t)
+	enemy_player_collision()
+	attack_cooldown_enemies(delta_t)
 
 	free_all(context.temp_allocator)
 }
@@ -56,7 +76,14 @@ draw :: proc() {
 		{
 			rl.DrawGrid(70, 10)
 			rl.DrawPlane(rl.Vector3(0), {10, 10}, rl.WHITE)
-			rl.DrawCapsule(player.pos, player.pos + rl.Vector3({0, 3, 0}), 1, 10, 10, rl.BLACK)
+			rl.DrawCapsule(
+				player.pos,
+				player.pos + rl.Vector3({0, 3, 0}),
+				player_radius,
+				10,
+				10,
+				rl.BLACK,
+			)
 
 			for e in enemies {
 				rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
@@ -64,7 +91,11 @@ draw :: proc() {
 		}
 		rl.EndMode3D()
 
-		rl.DrawFPS(10, 10)
+		rl.DrawFPS(900, 10)
+		buf: [32]u8
+		strconv.itoa(buf[:], int(player.health))
+		rl.DrawText("Health:", 10, 10, 50, rl.GREEN)
+		rl.DrawText(cstring(raw_data(buf[:])), 200, 10, 50, rl.GREEN)
 	}
 	rl.EndDrawing()
 }
@@ -89,8 +120,8 @@ controls :: proc(delta_t: f32) {
 		direction = rl.Vector3Normalize(direction)
 	}
 
-	new_pos.x += direction.x * move_speed * delta_t
-	new_pos.z += direction.z * move_speed * delta_t
+	new_pos.x += direction.x * player_move_speed * delta_t
+	new_pos.z += direction.z * player_move_speed * delta_t
 	set_player_pos(new_pos)
 }
 
