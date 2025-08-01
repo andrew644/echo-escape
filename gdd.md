@@ -6,28 +6,23 @@ When you die, loop back to the beginning and spend your crystals
 You can spend crystals in the run to temporarily upgrade at cheaper prices
 
 
-TODO next
-
-
-
-
-TODO
-spawn new enemies
+#TODO next
+upgrades
 shop menu
-sfx
-music
-enemies push eachother
+attacks
 
 
-
+#TODO
 enemy types
 gem types
 boss
 
 
-TODO last
-main menu
-options
-credits
+#TODO last
+sfx
+music
+enemies push eachother
 shaders / effects
 damage numbers
+
+main menu - sound

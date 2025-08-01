@@ -30,7 +30,6 @@ Scene :: enum {
 	Joke,
 }
 
-
 enemies: [dynamic]Enemy
 
 Player :: struct {
@@ -54,6 +53,8 @@ init :: proc() {
 	camera.up = {0, 1, 0}
 	camera.fovy = 90
 	camera.projection = rl.CameraProjection.PERSPECTIVE
+
+	load_shader()
 
 	spawn_enemy_r(.Box, 30)
 	spawn_enemy_r(.Box, 20)
@@ -120,30 +121,42 @@ draw :: proc() {
 		case .Menu:
 			draw_menu()
 		case .Game:
+			rl.SetShaderValue(
+				shader,
+				shader.locs[rl.ShaderLocationIndex.VECTOR_VIEW],
+				&camera.position,
+				rl.ShaderUniformDataType.VEC3,
+			)
+
 			rl.ClearBackground({33, 33, 200, 255})
 
 			rl.BeginMode3D(camera)
 			{
-				rl.DrawGrid(70, 10)
-				rl.DrawPlane(rl.Vector3({0, -0.1, 0}), {1000, 1000}, rl.DARKGREEN)
-				rl.DrawCapsule(
-					player.pos,
-					player.pos + rl.Vector3({0, 3, 0}),
-					player_radius,
-					10,
-					10,
-					rl.BLACK,
-				)
+				rl.BeginShaderMode(shader)
+				{
 
-				for e in enemies {
-					rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
+					rl.DrawGrid(70, 10)
+					rl.DrawPlane(rl.Vector3({0, -0.1, 0}), {1000, 1000}, rl.DARKGREEN)
+					rl.DrawCapsule(
+						player.pos,
+						player.pos + rl.Vector3({0, 3, 0}),
+						player_radius,
+						10,
+						10,
+						rl.DARKGRAY,
+					)
+
+					for e in enemies {
+						rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
+					}
+					for b in bullets {
+						rl.DrawSphere(b.pos, b.radius, rl.WHITE)
+					}
+					for g in gems {
+						rl.DrawSphere(g.pos, g.radius, rl.RED)
+					}
 				}
-				for b in bullets {
-					rl.DrawSphere(b.pos, b.radius, rl.WHITE)
-				}
-				for g in gems {
-					rl.DrawSphere(g.pos, g.radius, rl.RED)
-				}
+				rl.EndShaderMode()
 			}
 			rl.EndMode3D()
 
@@ -208,6 +221,7 @@ parent_window_size_changed :: proc(width, height: int) {
 }
 
 shutdown :: proc() {
+	rl.UnloadShader(shader)
 	rl.CloseWindow()
 }
 

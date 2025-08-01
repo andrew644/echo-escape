@@ -12,7 +12,7 @@ enemy_attack_damage: i32 = 10
 
 spawn_timer: f32 = 0
 
-cube_enemy_radius: f32 : 1
+cube_enemy_radius: f32 : 0.5
 sphere_enemy_radius: f32 : 1
 
 EnemyType :: enum {
