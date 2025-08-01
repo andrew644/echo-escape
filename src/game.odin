@@ -8,13 +8,17 @@ player_pos_start: rl.Vector3 : {0, 0, 0}
 player_radius: f32 : 1
 player_move_speed: f32 : 5
 
+level: i32 = 1
+time_per_level: f32 : 60
+level_timer: f32 = time_per_level
+
 game_width :: 1024
 game_height :: 576
 
 run: bool
 camera: rl.Camera
 player: Player
-scene: Scene = .Menu
+scene: Scene = .Game
 
 joke_timer: f32 = 1
 
@@ -32,6 +36,7 @@ enemies: [dynamic]Enemy
 Player :: struct {
 	pos:    rl.Vector3,
 	health: i32,
+	gems:   i32,
 }
 
 init :: proc() {
@@ -43,6 +48,7 @@ init :: proc() {
 
 	player.pos = player_pos_start
 	player.health = 100
+	player.gems = 0
 
 	set_player_pos(player_pos_start)
 	camera.up = {0, 1, 0}
@@ -52,8 +58,10 @@ init :: proc() {
 	spawn_enemy_r(.Box, 30)
 	spawn_enemy_r(.Box, 20)
 	spawn_enemy_r(.Box, 40)
-	spawn_enemy(.Box)
-	spawn_enemy(.Box)
+	spawn_enemy_r(.Box, 50)
+	spawn_enemy_r(.Box, 70)
+	spawn_enemy_r(.Box, 70)
+	spawn_enemy_r(.Box, 70)
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
@@ -87,7 +95,10 @@ update :: proc() {
 		enemy_player_collision()
 		attack_cooldown_enemies(delta_t)
 		process_bullets(delta_t)
+		process_gems()
 		remove_dead_enemies()
+		auto_spawn(delta_t)
+		process_level_timer(delta_t)
 	case .Upgrade:
 	case .Perm_Upgrade:
 	case .Joke:
@@ -114,7 +125,7 @@ draw :: proc() {
 			rl.BeginMode3D(camera)
 			{
 				rl.DrawGrid(70, 10)
-				rl.DrawPlane(rl.Vector3(0), {10, 10}, rl.WHITE)
+				rl.DrawPlane(rl.Vector3({0, -0.1, 0}), {1000, 1000}, rl.DARKGREEN)
 				rl.DrawCapsule(
 					player.pos,
 					player.pos + rl.Vector3({0, 3, 0}),
@@ -128,7 +139,10 @@ draw :: proc() {
 					rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
 				}
 				for b in bullets {
-					rl.DrawSphere(b.pos, b.radius, rl.RED)
+					rl.DrawSphere(b.pos, b.radius, rl.WHITE)
+				}
+				for g in gems {
+					rl.DrawSphere(g.pos, g.radius, rl.RED)
 				}
 			}
 			rl.EndMode3D()
@@ -205,4 +219,14 @@ should_run :: proc() -> bool {
 	}
 
 	return run
+}
+
+process_level_timer :: proc(delta_t: f32) {
+	if level_timer > 0 {
+		level_timer -= delta_t
+		return
+	}
+
+	level += 1
+	level_timer = time_per_level
 }

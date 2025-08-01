@@ -10,6 +10,8 @@ enemy_spawn_distance: f32 = 100
 enemy_attack_cooldown: f32 = 1
 enemy_attack_damage: i32 = 10
 
+spawn_timer: f32 = 0
+
 cube_enemy_radius: f32 : 1
 sphere_enemy_radius: f32 : 1
 
@@ -25,6 +27,47 @@ Enemy :: struct {
 	radius:          f32,
 	type:            EnemyType,
 	attack_cooldown: f32,
+}
+
+get_spawn_rate :: proc() -> f32 {
+	switch level {
+	case 1:
+		return 1
+	case 2:
+		return .8
+	case 3:
+		return .5
+	case 4:
+		return .3
+	case 5:
+		return .2
+	case 6:
+		return .1
+	case 7:
+		return .1
+	case 8:
+		return .1
+	case 9:
+		return .1
+	case 10:
+		return .1
+	}
+
+	return 1
+}
+
+auto_spawn :: proc(delta_t: f32) {
+	if spawn_timer > 0 {
+		spawn_timer -= delta_t
+		return
+	}
+
+	spawn_timer = get_spawn_rate()
+
+	switch level {
+	case 1:
+		spawn_enemy(.Box)
+	}
 }
 
 spawn_enemy :: proc(type: EnemyType) {
@@ -104,6 +147,7 @@ remove_dead_enemies :: proc() {
 	for e, index in enemies {
 		if e.health <= 0 {
 			enemies_to_remove[index] = index
+			spawn_gem(e.pos, .Red)
 		}
 	}
 

@@ -1,0 +1,54 @@
+package game
+
+import "core:slice"
+import rl "vendor:raylib"
+
+gem_radius: f32 : 0.2
+
+GemType :: enum {
+	Red,
+}
+
+gems: [dynamic]Gem
+
+Gem :: struct {
+	pos:    rl.Vector3,
+	radius: f32,
+	type:   GemType,
+	points: i32,
+}
+
+spawn_gem :: proc(pos: rl.Vector3, type: GemType) {
+	g: Gem
+	g.pos = pos
+	g.type = type
+	g.radius = gem_radius
+
+	switch type {
+	case .Red:
+		g.points = 1
+	}
+
+	append(&gems, g)
+}
+
+process_gems :: proc() {
+	gems_to_remove := make(map[int]int, context.temp_allocator)
+
+	for g, index in gems {
+		collision := rl.CheckCollisionCircles(player.pos.xz, player_radius, g.pos.xz, g.radius)
+		if collision {
+			gems_to_remove[index] = index
+			player.gems += g.points
+		}
+	}
+
+	sorted_remove := make([dynamic]int, context.temp_allocator)
+	for k, _ in gems_to_remove {
+		append(&sorted_remove, k)
+	}
+	slice.reverse_sort(sorted_remove[:])
+	for r in sorted_remove {
+		unordered_remove(&gems, r)
+	}
+}

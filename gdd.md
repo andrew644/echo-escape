@@ -12,13 +12,17 @@ TODO next
 
 
 TODO
-drop gems
-pickup gems
 spawn new enemies
 shop menu
 sfx
 music
 enemies push eachother
+
+
+
+enemy types
+gem types
+boss
 
 
 TODO last
