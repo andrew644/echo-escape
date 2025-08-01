@@ -27,13 +27,28 @@ Bullet :: struct {
 	type:     BulletType,
 }
 
+get_cross_upgrade :: proc() -> f32 {
+	switch upgrades[UpgradeType.Cross_Gun] {
+	case 0:
+		return 0
+	case 1:
+		return 0
+	case 2:
+		return 0.5
+	case 3:
+		return 0.8
+	}
+
+	return 0
+}
+
 process_bullets :: proc(delta_t: f32) {
 	bullets_to_remove := make(map[int]int, context.temp_allocator)
 	dot_cooldown -= delta_t
 
 	//spawn bullets
 	if dot_cooldown <= 0 {
-		dot_cooldown = dot_cooldown_max
+		dot_cooldown = dot_cooldown_max - get_cross_upgrade()
 
 		spawn_dot()
 	}

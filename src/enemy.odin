@@ -145,11 +145,17 @@ remove_dead_enemies :: proc() {
 	enemies_to_remove := make(map[int]int, context.temp_allocator)
 
 	for e, index in enemies {
+		//remove dead enemies
 		if e.health <= 0 {
 			enemies_to_remove[index] = index
 			spawn_gem(e.pos, .Red)
 		}
+		//remove enemies that are too far away
+		if rl.Vector2Distance(e.pos.xz, player.pos.xz) > 200 {
+			enemies_to_remove[index] = index
+		}
 	}
+
 
 	sorted_remove := make([dynamic]int, context.temp_allocator)
 	for k, _ in enemies_to_remove {

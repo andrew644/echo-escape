@@ -41,20 +41,30 @@ Player :: struct {
 init :: proc() {
 	run = true
 	rl.SetConfigFlags({.VSYNC_HINT, .MSAA_4X_HINT})
-	rl.InitWindow(game_width, game_height, "Game")
+	rl.InitWindow(game_width, game_height, "Echo Escape")
 	rl.InitAudioDevice()
 	rl.SetTargetFPS(60)
 
-	player.pos = player_pos_start
-	player.health = 100
-	player.gems = 0
-
-	set_player_pos(player_pos_start)
 	camera.up = {0, 1, 0}
 	camera.fovy = 90
 	camera.projection = rl.CameraProjection.PERSPECTIVE
 
 	load_shader()
+
+	perm_upgrades[UpgradeType.Cross_Gun] = 1
+	start_run()
+}
+
+start_run :: proc() {
+	for &u, i in upgrades {
+		u = perm_upgrades[i]
+	}
+
+	player.pos = player_pos_start
+	set_player_pos(player_pos_start)
+
+	player.health = 100
+	player.gems = 0
 
 	spawn_enemy_r(.Box, 30)
 	spawn_enemy_r(.Box, 20)
@@ -76,6 +86,7 @@ init :: proc() {
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
+
 }
 
 update :: proc() {
@@ -121,12 +132,15 @@ draw :: proc() {
 		case .Menu:
 			draw_menu()
 		case .Game:
+			/*
+			camera_pos := camera.position
 			rl.SetShaderValue(
 				shader,
 				shader.locs[rl.ShaderLocationIndex.VECTOR_VIEW],
-				&camera.position,
+				&camera_pos,
 				rl.ShaderUniformDataType.VEC3,
 			)
+			*/
 
 			rl.ClearBackground({33, 33, 200, 255})
 
@@ -134,9 +148,8 @@ draw :: proc() {
 			{
 				rl.BeginShaderMode(shader)
 				{
-
 					rl.DrawGrid(70, 10)
-					rl.DrawPlane(rl.Vector3({0, -0.1, 0}), {1000, 1000}, rl.DARKGREEN)
+					rl.DrawPlane(rl.Vector3({0, -0.1, 0}), {1000, 1000}, rl.BLACK)
 					rl.DrawCapsule(
 						player.pos,
 						player.pos + rl.Vector3({0, 3, 0}),
@@ -150,7 +163,7 @@ draw :: proc() {
 						rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
 					}
 					for b in bullets {
-						rl.DrawSphere(b.pos, b.radius, rl.WHITE)
+						rl.DrawSphere(b.pos, b.radius, rl.LIGHTGRAY)
 					}
 					for g in gems {
 						rl.DrawSphere(g.pos, g.radius, rl.RED)
@@ -163,8 +176,12 @@ draw :: proc() {
 			rl.DrawFPS(900, 10)
 			buf: [32]u8
 			strconv.itoa(buf[:], int(player.health))
-			rl.DrawText("Health:", 10, 10, 50, rl.GREEN)
-			rl.DrawText(cstring(raw_data(buf[:])), 200, 10, 50, rl.GREEN)
+			rl.DrawText("Health:", 10, 10, 40, rl.GREEN)
+			rl.DrawText(cstring(raw_data(buf[:])), 170, 10, 40, rl.GREEN)
+			buf_gem: [32]u8
+			strconv.itoa(buf_gem[:], int(player.gems))
+			rl.DrawText("Ð:", 10, 50, 40, rl.GREEN)
+			rl.DrawText(cstring(raw_data(buf_gem[:])), 55, 50, 40, rl.GREEN)
 		case .Upgrade:
 		case .Perm_Upgrade:
 		case .Joke:
