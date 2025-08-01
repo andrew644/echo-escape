@@ -1,14 +1,13 @@
 package game
 
-/*
-import "core:math"
 import "core:math/rand"
-import rl "vendor:raylib"
-*/
 
-upgrades: [UpgradeType.Total_Upgrades]i32
-perm_upgrades: [UpgradeType.Total_Upgrades]i32
+upgrades: [total_upgrades]i32
+perm_upgrades: [total_upgrades]i32
 
+upgrade_shuffle: [dynamic]UpgradeType
+
+total_upgrades :: 9
 UpgradeType :: enum i32 {
 	Move_Speed = 0,
 	Health_Regen,
@@ -19,7 +18,14 @@ UpgradeType :: enum i32 {
 	Everywhere_Gun,
 	Gem_Bonus,
 	Boss_Debuff,
-	Total_Upgrades,
+}
+
+init_upgrades :: proc() {
+	perm_upgrades[UpgradeType.Cross_Gun] = 1
+	for u in UpgradeType {
+		append(&upgrade_shuffle, u)
+	}
+	generate_upgrade()
 }
 
 get_upgrade_name :: proc(upgrade: UpgradeType) -> cstring {
@@ -42,9 +48,24 @@ get_upgrade_name :: proc(upgrade: UpgradeType) -> cstring {
 		return "Gem Bonus"
 	case .Boss_Debuff:
 		return "Boss Debuff"
-	case .Total_Upgrades:
-		return "error"
 	}
 
 	return ""
+}
+
+generate_upgrade :: proc() {
+	rand.shuffle(upgrade_shuffle[:])
+}
+
+remove_upgrade :: proc(remove: UpgradeType) {
+	if len(upgrade_shuffle) <= 3 {
+		return
+		//TODO
+	}
+	for u, index in upgrade_shuffle {
+		if u == remove {
+			unordered_remove(&upgrade_shuffle, index)
+			return
+		}
+	}
 }

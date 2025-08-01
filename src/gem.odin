@@ -39,7 +39,7 @@ process_gems :: proc() {
 		collision := rl.CheckCollisionCircles(player.pos.xz, player_radius, g.pos.xz, g.radius)
 		if collision {
 			gems_to_remove[index] = index
-			player.gems += g.points
+			player.gems += g.points * get_gem_bonus()
 		}
 	}
 
@@ -51,4 +51,19 @@ process_gems :: proc() {
 	for r in sorted_remove {
 		unordered_remove(&gems, r)
 	}
+}
+
+get_gem_bonus :: proc() -> i32 {
+	switch upgrades[UpgradeType.Gem_Bonus] {
+	case 0:
+		return 1
+	case 1:
+		return 2
+	case 2:
+		return 3
+	case 3:
+		return 5
+	}
+
+	return 1
 }

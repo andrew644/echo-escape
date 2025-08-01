@@ -67,6 +67,24 @@ auto_spawn :: proc(delta_t: f32) {
 	switch level {
 	case 1:
 		spawn_enemy(.Box)
+	case 2:
+		spawn_enemy(.Box)
+	case 3:
+		spawn_enemy(.Box)
+	case 4:
+		spawn_enemy(.Box)
+	case 5:
+		spawn_enemy(.Box)
+	case 6:
+		spawn_enemy(.Box)
+	case 7:
+		spawn_enemy(.Box)
+	case 8:
+		spawn_enemy(.Box)
+	case 9:
+		spawn_enemy(.Box)
+	case 10:
+		spawn_enemy(.Box)
 	}
 }
 
