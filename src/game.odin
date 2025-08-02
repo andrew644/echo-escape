@@ -11,6 +11,9 @@ level: i32 = 1
 time_per_level: f32 : 60
 level_timer: f32 = time_per_level
 
+die_timer: f32 = die_timer_max
+die_timer_max: f32 = 4
+
 game_width :: 1024
 game_height :: 576
 
@@ -20,7 +23,7 @@ checked_tab: bool = false
 run: bool
 camera: rl.Camera
 player: Player
-scene: Scene = .Menu
+scene: Scene = .Perm_Upgrade
 
 joke_timer: f32 = 1
 
@@ -30,6 +33,8 @@ Scene :: enum {
 	Upgrade,
 	Perm_Upgrade,
 	Joke,
+	Die,
+	Win,
 }
 
 enemies: [dynamic]Enemy
@@ -58,15 +63,22 @@ init :: proc() {
 }
 
 start_run :: proc() {
-	for &u, i in upgrades {
-		u = perm_upgrades[i]
+	level = 1
+	boss_alive = false
+	clear(&enemies)
+	clear(&gems)
+	clear(&bullets)
+	for _, i in perm_upgrades {
+		upgrades[i] = perm_upgrades[i]
 	}
 
 	player.pos = player_pos_start
 	set_player_pos(player_pos_start)
 
 	player.health = 100
-	player.gems = 0
+	player.gems = 2000
+
+	level_timer = time_per_level
 
 	spawn_enemy_r(.Box, 30)
 	spawn_enemy_r(.Box, 20)
@@ -88,7 +100,6 @@ start_run :: proc() {
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
-
 }
 
 update :: proc() {
@@ -114,23 +125,56 @@ update :: proc() {
 		remove_dead_enemies()
 		auto_spawn(delta_t)
 		process_level_timer(delta_t)
+		check_die()
 	case .Upgrade:
 		draw(delta_t)
-		if rl.IsKeyDown(.ONE) {
+		if rl.IsKeyDown(.ONE) && has_money(0) {
 			upgrade_selected(0)
-		} else if rl.IsKeyDown(.TWO) {
+		} else if rl.IsKeyDown(.TWO) && has_money(1) {
 			upgrade_selected(1)
-		} else if rl.IsKeyDown(.THREE) {
+		} else if rl.IsKeyDown(.THREE) && has_money(2) {
 			upgrade_selected(2)
+		} else if rl.IsKeyDown(.ENTER) {
+			scene = .Game
 		}
 	case .Perm_Upgrade:
 		draw(delta_t)
+		if rl.IsKeyPressed(.ONE) && has_money_perm(0) {
+			upgrade_selected_perm(0)
+		} else if rl.IsKeyPressed(.TWO) && has_money_perm(1) {
+			upgrade_selected_perm(1)
+		} else if rl.IsKeyPressed(.THREE) && has_money_perm(2) {
+			upgrade_selected_perm(2)
+		} else if rl.IsKeyPressed(.FOUR) && has_money_perm(3) {
+			upgrade_selected_perm(3)
+		} else if rl.IsKeyPressed(.FIVE) && has_money_perm(4) {
+			upgrade_selected_perm(4)
+		} else if rl.IsKeyPressed(.SIX) && has_money_perm(5) {
+			upgrade_selected_perm(5)
+		} else if rl.IsKeyPressed(.SEVEN) && has_money_perm(6) {
+			upgrade_selected_perm(6)
+		} else if rl.IsKeyPressed(.EIGHT) && has_money_perm(7) {
+			upgrade_selected_perm(7)
+		} else if rl.IsKeyPressed(.NINE) && has_money_perm(8) {
+			upgrade_selected_perm(8)
+		} else if rl.IsKeyDown(.ENTER) {
+			start_run()
+			scene = .Game
+		}
 	case .Joke:
 		joke_timer -= delta_t
 		if joke_timer <= 0 {
 			scene = .Menu
 			joke_timer = 1
 		}
+		draw(delta_t)
+	case .Die:
+		draw(delta_t)
+		die_timer -= delta_t
+		if die_timer <= 0 {
+			scene = .Perm_Upgrade
+		}
+	case .Win:
 		draw(delta_t)
 	}
 
@@ -140,10 +184,20 @@ update :: proc() {
 upgrade_selected :: proc(i: i32) {
 	upgrade: UpgradeType = upgrade_shuffle[i]
 	upgrades[upgrade] += 1
+	player.gems -= upgrade_cost[upgrade]
 	if upgrades[upgrade] >= 3 {
 		remove_upgrade(upgrade)
 	}
 	scene = .Game
+}
+
+upgrade_selected_perm :: proc(i: i32) {
+	upgrade: UpgradeType = UpgradeType(i)
+	if perm_upgrades[upgrade] >= 3 {
+		return
+	}
+	perm_upgrades[upgrade] += 1
+	player.gems -= perm_upgrade_cost[upgrade]
 }
 
 draw :: proc(delta_t: f32) {
@@ -165,13 +219,62 @@ draw :: proc(delta_t: f32) {
 				draw_upgrade_menu()
 			}
 		case .Perm_Upgrade:
+			draw_perm_upgrade_menu()
 		case .Joke:
 			draw_menu()
 			rl.DrawRectangle(150, 200, 700, 200, rl.BLACK)
 			rl.DrawText("deal with it", 200, 250, 110, rl.RED)
+		case .Die:
+			rl.ClearBackground(rl.BLACK)
+			rl.DrawText("Looping Back...", (game_width / 2) - 300, 10, 90, rl.GREEN)
+		case .Win:
+			rl.ClearBackground(rl.BLACK)
+			rl.DrawText("Loop Escaped!", (game_width / 2) - 300, 10, 90, rl.GREEN)
+			rl.DrawText("Thanks for playing", (game_width / 2) - 300, 210, 70, rl.GREEN)
 		}
 	}
 	rl.EndDrawing()
+}
+
+draw_perm_upgrade_menu :: proc() {
+	rl.ClearBackground(rl.BLACK)
+	rl.DrawText("Permanent Upgrade Time!", 370, 20, 40, rl.GREEN)
+	rl.DrawText("Press '1, 2, 3, ... 9, 0 to upgrade", 70, 90, 20, rl.GREEN)
+	rl.DrawRectangle(60, 120, 494, 340, rl.DARKGREEN)
+
+	for u, i in UpgradeType {
+		draw_perm_upgrade(u, i32(140 + (i * 30)))
+	}
+
+	rl.DrawText("No Money? Press Enter to skip!", 260, 470, 30, rl.GREEN)
+}
+
+draw_perm_upgrade :: proc(u: UpgradeType, y: i32) {
+	buf: [32]u8
+	rl.DrawText(get_upgrade_name(u), 195, y, 20, rl.BLACK)
+	strconv.itoa(buf[:], int(u) + 1)
+	rl.DrawText(cstring(raw_data(buf[:])), 170, y, 20, rl.BLACK)
+
+	strconv.itoa(buf[:], int(perm_upgrade_cost[u]))
+	rl.DrawText("Ð", 70, y, 20, money_color_perm(i32(u)))
+	rl.DrawText(cstring(raw_data(buf[:])), 87, y, 20, money_color_perm(i32(u)))
+	rl.DrawText(upgrade_level_text(perm_upgrades[u]), 440, y, 20, rl.GREEN)
+}
+
+upgrade_level_text :: proc(i: i32) -> cstring {
+
+	switch i {
+	case 0:
+		return "0/3"
+	case 1:
+		return "1/3"
+	case 2:
+		return "2/3"
+	case 3:
+		return "3/3"
+	}
+
+	return ""
 }
 
 draw_upgrade_menu :: proc() {
@@ -253,7 +356,16 @@ draw_game :: proc(delta_t: f32) {
 			)
 
 			for e in enemies {
-				rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
+				switch e.type {
+				case .Box:
+					rl.DrawCube(e.pos, 1, 1, 1, rl.GRAY)
+				case .Big_Box:
+					rl.DrawCube(e.pos, 2, 2, 2, rl.GRAY)
+				case .Cap:
+					rl.DrawCapsule(e.pos, e.pos + rl.Vector3({0, 4, 0}), e.radius, 10, 10, rl.GRAY)
+				case .Boss:
+					rl.DrawCapsule(e.pos, e.pos + rl.Vector3({0, 8, 0}), e.radius, 20, 20, rl.GRAY)
+				}
 			}
 			for b in bullets {
 				rl.DrawSphere(b.pos, b.radius, rl.LIGHTGRAY)
@@ -269,15 +381,36 @@ draw_game :: proc(delta_t: f32) {
 				rings := loopgun_rings()
 				if rings >= 1 {
 
-					rl.DrawSphereWires(player.pos, loopgun_radius_1, 13, 13, rl.WHITE)
+					rl.DrawCylinderWires(
+						player.pos,
+						loopgun_radius_1,
+						loopgun_radius_1,
+						3,
+						15,
+						rl.WHITE,
+					)
 				}
 				if rings >= 2 {
 
-					rl.DrawSphereWires(player.pos, loopgun_radius_2, 15, 15, rl.WHITE)
+					rl.DrawCylinderWires(
+						player.pos,
+						loopgun_radius_2,
+						loopgun_radius_2,
+						3,
+						20,
+						rl.WHITE,
+					)
 				}
 				if rings >= 3 {
 
-					rl.DrawSphereWires(player.pos, loopgun_radius_3, 20, 20, rl.WHITE)
+					rl.DrawCylinderWires(
+						player.pos,
+						loopgun_radius_3,
+						loopgun_radius_3,
+						3,
+						30,
+						rl.WHITE,
+					)
 				}
 			}
 			if everywhere_on_cooldown > 0 {
@@ -305,8 +438,9 @@ draw_game :: proc(delta_t: f32) {
 }
 
 draw_upgrade :: proc() {
-	rl.DrawRectangle(50, 50, game_width - 100, game_height - 100, rl.BLACK)
-	rl.DrawText("Upgrade Time", 380, 70, 40, rl.GREEN)
+	buf: [32]u8
+	rl.DrawRectangle(50, 100, game_width - 100, game_height - 150, rl.BLACK)
+	rl.DrawText("Upgrade Time", 370, 120, 40, rl.GREEN)
 	rl.DrawText("Press '1'", 70, 190, 20, rl.GREEN)
 	rl.DrawText("Press '2'", 374, 190, 20, rl.GREEN)
 	rl.DrawText("Press '3'", 678, 190, 20, rl.GREEN)
@@ -316,6 +450,20 @@ draw_upgrade :: proc() {
 	rl.DrawText(get_upgrade_name(upgrade_shuffle[0]), 70, 300, 20, rl.BLACK)
 	rl.DrawText(get_upgrade_name(upgrade_shuffle[1]), 374, 300, 20, rl.BLACK)
 	rl.DrawText(get_upgrade_name(upgrade_shuffle[2]), 678, 300, 20, rl.BLACK)
+
+	strconv.itoa(buf[:], int(upgrade_cost[upgrade_shuffle[0]]))
+	rl.DrawText("Ð", 70, 330, 20, money_color(0))
+	rl.DrawText(cstring(raw_data(buf[:])), 87, 330, 20, money_color(0))
+
+	strconv.itoa(buf[:], int(upgrade_cost[upgrade_shuffle[1]]))
+	rl.DrawText(cstring(raw_data(buf[:])), 391, 330, 20, money_color(1))
+	rl.DrawText("Ð", 374, 330, 20, money_color(1))
+
+	strconv.itoa(buf[:], int(upgrade_cost[upgrade_shuffle[2]]))
+	rl.DrawText(cstring(raw_data(buf[:])), 695, 330, 20, money_color(2))
+	rl.DrawText("Ð", 678, 330, 20, money_color(2))
+
+	rl.DrawText("No Money? Press Enter to skip!", 260, 470, 30, rl.GREEN)
 }
 
 controls :: proc(delta_t: f32) {
@@ -378,7 +526,8 @@ process_level_timer :: proc(delta_t: f32) {
 	}
 
 	level += 1
-	if level >= 10 {
+	remove_gems()
+	if level == 10 {
 		spawn_boss()
 	}
 	scene = .Upgrade

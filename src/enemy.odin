@@ -8,16 +8,18 @@ import rl "vendor:raylib"
 max_enemies: i32 = 100
 enemy_spawn_distance: f32 = 100
 enemy_attack_cooldown: f32 = 1
-enemy_attack_damage: i32 = 10
 
 spawn_timer: f32 = 0
 
 cube_enemy_radius: f32 : 0.5
-sphere_enemy_radius: f32 : 1
+
+boss_alive: bool = false
+boss: Enemy
 
 EnemyType :: enum {
 	Box,
-	Sphere,
+	Big_Box,
+	Cap,
 	Boss,
 }
 
@@ -28,6 +30,7 @@ Enemy :: struct {
 	radius:          f32,
 	type:            EnemyType,
 	attack_cooldown: f32,
+	attack:          i32,
 }
 
 get_spawn_rate :: proc() -> f32 {
@@ -71,21 +74,37 @@ auto_spawn :: proc(delta_t: f32) {
 	case 2:
 		spawn_enemy(.Box)
 	case 3:
-		spawn_enemy(.Box)
+		if player.gems % 2 == 0 {
+			spawn_enemy(.Box)
+		} else {
+			spawn_enemy(.Big_Box)
+		}
 	case 4:
-		spawn_enemy(.Box)
+		if player.gems % 2 == 0 {
+			spawn_enemy(.Box)
+		} else {
+			spawn_enemy(.Big_Box)
+		}
 	case 5:
-		spawn_enemy(.Box)
+		spawn_enemy(.Big_Box)
 	case 6:
-		spawn_enemy(.Box)
+		spawn_enemy(.Big_Box)
 	case 7:
-		spawn_enemy(.Box)
+		if player.gems % 2 == 0 {
+			spawn_enemy(.Cap)
+		} else {
+			spawn_enemy(.Big_Box)
+		}
 	case 8:
-		spawn_enemy(.Box)
+		if player.gems % 2 == 0 {
+			spawn_enemy(.Cap)
+		} else {
+			spawn_enemy(.Big_Box)
+		}
 	case 9:
-		spawn_enemy(.Box)
+		spawn_enemy(.Cap)
 	case 10:
-		spawn_enemy(.Box)
+		spawn_enemy(.Cap)
 	}
 }
 
@@ -102,18 +121,54 @@ spawn_enemy_r :: proc(type: EnemyType, distance_from_player: f32) {
 	switch type {
 	case .Box:
 		radius = cube_enemy_radius
-	case .Sphere:
-		radius = sphere_enemy_radius
+	case .Big_Box:
+		radius = 1
+	case .Cap:
+		radius = 3
 	case .Boss:
 		radius = 7
 	}
+	attack: i32
+	switch type {
+	case .Box:
+		attack = 10
+	case .Big_Box:
+		attack = 20
+	case .Cap:
+		attack = 30
+	case .Boss:
+		attack = 50
+	}
+	speed: f32
+	switch type {
+	case .Box:
+		speed = 2.5
+	case .Big_Box:
+		speed = 3
+	case .Cap:
+		speed = 5
+	case .Boss:
+		speed = 6
+	}
+	health: i32
+	switch type {
+	case .Box:
+		health = 10
+	case .Big_Box:
+		health = 20
+	case .Cap:
+		health = 50
+	case .Boss:
+		health = 300
+	}
 	e: Enemy
-	e.health = 10
+	e.health = health
 	e.pos = random_point_circle(player.pos, distance_from_player)
 	e.type = type
-	e.speed = 2.5
+	e.speed = speed
 	e.radius = radius
 	e.attack_cooldown = 0
+	e.attack = attack
 
 	append(&enemies, e)
 }
@@ -155,13 +210,18 @@ enemy_player_collision :: proc() {
 
 		collision := rl.CheckCollisionCircles(player_pos, player_radius, e.pos.xz, e.radius)
 		if collision {
-			player.health -= enemy_attack_damage
+			player.health -= e.attack
 			e.attack_cooldown = enemy_attack_cooldown
 		}
 	}
 }
 
 remove_dead_enemies :: proc() {
+	//Boss
+	if boss_alive && boss.health <= 0 {
+		scene = .Win
+	}
+
 	enemies_to_remove := make(map[int]int, context.temp_allocator)
 
 	for e, index in enemies {
@@ -188,13 +248,30 @@ remove_dead_enemies :: proc() {
 }
 
 spawn_boss :: proc() {
+	debuf := upgrades[UpgradeType.Boss_Debuff]
 	e: Enemy
-	e.health = 300
+	if debuf >= 1 {
+		e.health = 300
+	} else {
+		e.health = 500
+	}
 	e.pos = random_point_circle(player.pos, enemy_spawn_distance)
 	e.type = .Boss
-	e.speed = 2.5
+	if debuf >= 2 {
+		e.speed = 2.5
+	} else {
+		e.speed = 3.5
+	}
 	e.radius = 7
 	e.attack_cooldown = 0
+	if debuf >= 3 {
+		e.attack = 30
+	} else {
+		e.attack = 100
+	}
+
+	boss_alive = true
 
 	append(&enemies, e)
+	boss = e
 }

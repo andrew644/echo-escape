@@ -60,3 +60,10 @@ regen_player :: proc(delta_t: f32) {
 		player.health = get_max_health()
 	}
 }
+
+check_die :: proc() {
+	if player.health <= 0 {
+		scene = .Die
+		die_timer = die_timer_max
+	}
+}

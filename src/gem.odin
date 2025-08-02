@@ -4,6 +4,7 @@ import "core:slice"
 import rl "vendor:raylib"
 
 gem_radius: f32 : 0.2
+gem_max: int : 100
 
 GemType :: enum {
 	Red,
@@ -30,6 +31,12 @@ spawn_gem :: proc(pos: rl.Vector3, type: GemType) {
 	}
 
 	append(&gems, g)
+}
+
+remove_gems :: proc() {
+	for len(gems) > gem_max {
+		ordered_remove(&gems, 0)
+	}
 }
 
 process_gems :: proc() {

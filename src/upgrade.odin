@@ -1,9 +1,12 @@
 package game
 
 import "core:math/rand"
+import rl "vendor:raylib"
 
 upgrades: [total_upgrades]i32
 perm_upgrades: [total_upgrades]i32
+perm_upgrade_cost: [total_upgrades]i32
+upgrade_cost: [total_upgrades]i32
 
 upgrade_shuffle: [dynamic]UpgradeType
 
@@ -26,6 +29,26 @@ init_upgrades :: proc() {
 		append(&upgrade_shuffle, u)
 	}
 	generate_upgrade()
+
+	perm_upgrade_cost[UpgradeType.Move_Speed] = 70
+	perm_upgrade_cost[UpgradeType.Health_Regen] = 20
+	perm_upgrade_cost[UpgradeType.Max_Health] = 30
+	perm_upgrade_cost[UpgradeType.Cross_Gun] = 50
+	perm_upgrade_cost[UpgradeType.Loop_Gun] = 60
+	perm_upgrade_cost[UpgradeType.Bomb_Gun] = 100
+	perm_upgrade_cost[UpgradeType.Everywhere_Gun] = 40
+	perm_upgrade_cost[UpgradeType.Gem_Bonus] = 90
+	perm_upgrade_cost[UpgradeType.Boss_Debuff] = 200
+
+	upgrade_cost[UpgradeType.Move_Speed] = 20
+	upgrade_cost[UpgradeType.Health_Regen] = 3
+	upgrade_cost[UpgradeType.Max_Health] = 5
+	upgrade_cost[UpgradeType.Cross_Gun] = 10
+	upgrade_cost[UpgradeType.Loop_Gun] = 20
+	upgrade_cost[UpgradeType.Bomb_Gun] = 40
+	upgrade_cost[UpgradeType.Everywhere_Gun] = 20
+	upgrade_cost[UpgradeType.Gem_Bonus] = 40
+	upgrade_cost[UpgradeType.Boss_Debuff] = 100
 }
 
 get_upgrade_name :: proc(upgrade: UpgradeType) -> cstring {
@@ -67,5 +90,29 @@ remove_upgrade :: proc(remove: UpgradeType) {
 			unordered_remove(&upgrade_shuffle, index)
 			return
 		}
+	}
+}
+
+has_money :: proc(i: i32) -> bool {
+	return player.gems >= upgrade_cost[upgrade_shuffle[i]]
+}
+
+money_color :: proc(i: i32) -> rl.Color {
+	if has_money(0) {
+		return rl.GREEN
+	} else {
+		return rl.GRAY
+	}
+}
+
+has_money_perm :: proc(i: i32) -> bool {
+	return player.gems >= perm_upgrade_cost[i]
+}
+
+money_color_perm :: proc(i: i32) -> rl.Color {
+	if has_money_perm(0) {
+		return rl.GREEN
+	} else {
+		return rl.GRAY
 	}
 }
