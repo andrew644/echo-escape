@@ -14,6 +14,9 @@ level_timer: f32 = time_per_level
 game_width :: 1024
 game_height :: 576
 
+
+checked_tab: bool = false
+
 run: bool
 camera: rl.Camera
 player: Player
@@ -137,6 +140,9 @@ update :: proc() {
 upgrade_selected :: proc(i: i32) {
 	upgrade: UpgradeType = upgrade_shuffle[i]
 	upgrades[upgrade] += 1
+	if upgrades[upgrade] >= 3 {
+		remove_upgrade(upgrade)
+	}
 	scene = .Game
 }
 
@@ -149,6 +155,7 @@ draw :: proc() {
 		case .Game:
 			draw_game()
 			if rl.IsKeyDown(.TAB) {
+				checked_tab = true
 				draw_upgrade_menu()
 			}
 		case .Upgrade:
@@ -267,6 +274,9 @@ draw_game :: proc() {
 	strconv.itoa(buf_gem[:], int(player.gems))
 	rl.DrawText("Ð:", 10, 50, 40, rl.GREEN)
 	rl.DrawText(cstring(raw_data(buf_gem[:])), 55, 50, 40, rl.GREEN)
+	if level == 2 && checked_tab == false {
+		rl.DrawText("Press Tab to check upgrade status", 10, game_height - 30, 15, rl.GREEN)
+	}
 }
 
 draw_upgrade :: proc() {
@@ -334,12 +344,18 @@ should_run :: proc() -> bool {
 }
 
 process_level_timer :: proc(delta_t: f32) {
+	if level >= 10 {
+		return
+	}
 	if level_timer > 0 {
 		level_timer -= delta_t
 		return
 	}
 
 	level += 1
+	if level >= 10 {
+		spawn_boss()
+	}
 	scene = .Upgrade
 	generate_upgrade()
 	level_timer = time_per_level

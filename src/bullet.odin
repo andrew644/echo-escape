@@ -53,6 +53,9 @@ process_bullets :: proc(delta_t: f32) {
 		spawn_dot()
 	}
 
+	process_everywhere(delta_t)
+	process_loopgun(delta_t)
+
 	//remove old bullets
 	for &b, index in bullets {
 		b.lifetime -= delta_t

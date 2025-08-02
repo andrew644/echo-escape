@@ -18,6 +18,7 @@ sphere_enemy_radius: f32 : 1
 EnemyType :: enum {
 	Box,
 	Sphere,
+	Boss,
 }
 
 Enemy :: struct {
@@ -103,6 +104,8 @@ spawn_enemy_r :: proc(type: EnemyType, distance_from_player: f32) {
 		radius = cube_enemy_radius
 	case .Sphere:
 		radius = sphere_enemy_radius
+	case .Boss:
+		radius = 7
 	}
 	e: Enemy
 	e.health = 10
@@ -115,7 +118,6 @@ spawn_enemy_r :: proc(type: EnemyType, distance_from_player: f32) {
 	append(&enemies, e)
 }
 
-@(private = "file")
 random_point_circle :: proc(center: rl.Vector3, radius: f32) -> rl.Vector3 {
 	angle := rand.float32_range(0, 2 * math.PI)
 	return rl.Vector3(
@@ -183,4 +185,16 @@ remove_dead_enemies :: proc() {
 	for r in sorted_remove {
 		unordered_remove(&enemies, r)
 	}
+}
+
+spawn_boss :: proc() {
+	e: Enemy
+	e.health = 300
+	e.pos = random_point_circle(player.pos, enemy_spawn_distance)
+	e.type = .Boss
+	e.speed = 2.5
+	e.radius = 7
+	e.attack_cooldown = 0
+
+	append(&enemies, e)
 }

@@ -7,15 +7,19 @@ You can spend crystals in the run to temporarily upgrade at cheaper prices
 
 
 #TODO next
-upgrades
-shop menu
-attacks
+bomb gun
+loop gun
+everywhere gun
 
+damage numbers
+
+
+upgrades cost money
 
 #TODO
 enemy types
 gem types
-boss
+draw boss
 
 
 #TODO last
@@ -24,5 +28,6 @@ music
 enemies push eachother
 shaders / effects
 damage numbers
+reroll : costs money
 
 main menu - sound

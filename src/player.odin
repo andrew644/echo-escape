@@ -38,11 +38,11 @@ get_player_move_speed :: proc() -> f32 {
 	case 0:
 		return 5
 	case 1:
-		return 7
+		return 6
 	case 2:
-		return 9
+		return 7
 	case 3:
-		return 11
+		return 8
 	}
 
 	return 5
