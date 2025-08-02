@@ -40,6 +40,7 @@ process_bomb :: proc(delta_t: f32) {
 			b.lifetime = 0.1
 			b.damage = get_bomb_damage()
 			b.type = .Dot
+			append(&bullets, b)
 		}
 	}
 }

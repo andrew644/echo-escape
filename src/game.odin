@@ -95,7 +95,7 @@ update :: proc() {
 	delta_t := rl.GetFrameTime()
 	switch scene {
 	case .Menu:
-		draw()
+		draw(delta_t)
 		if rl.IsKeyDown(.ENTER) {
 			scene = .Game
 		}
@@ -103,7 +103,7 @@ update :: proc() {
 			scene = .Joke
 		}
 	case .Game:
-		draw()
+		draw(delta_t)
 		controls(delta_t)
 		move_enemies(delta_t)
 		enemy_player_collision()
@@ -115,7 +115,7 @@ update :: proc() {
 		auto_spawn(delta_t)
 		process_level_timer(delta_t)
 	case .Upgrade:
-		draw()
+		draw(delta_t)
 		if rl.IsKeyDown(.ONE) {
 			upgrade_selected(0)
 		} else if rl.IsKeyDown(.TWO) {
@@ -124,14 +124,14 @@ update :: proc() {
 			upgrade_selected(2)
 		}
 	case .Perm_Upgrade:
-		draw()
+		draw(delta_t)
 	case .Joke:
 		joke_timer -= delta_t
 		if joke_timer <= 0 {
 			scene = .Menu
 			joke_timer = 1
 		}
-		draw()
+		draw(delta_t)
 	}
 
 	free_all(context.temp_allocator)
@@ -146,20 +146,20 @@ upgrade_selected :: proc(i: i32) {
 	scene = .Game
 }
 
-draw :: proc() {
+draw :: proc(delta_t: f32) {
 	rl.BeginDrawing()
 	{
 		switch scene {
 		case .Menu:
 			draw_menu()
 		case .Game:
-			draw_game()
+			draw_game(delta_t)
 			if rl.IsKeyDown(.TAB) {
 				checked_tab = true
 				draw_upgrade_menu()
 			}
 		case .Upgrade:
-			draw_game()
+			draw_game(delta_t)
 			draw_upgrade()
 			if rl.IsKeyDown(.TAB) {
 				draw_upgrade_menu()
@@ -217,13 +217,14 @@ draw_upgrade_menu :: proc() {
 draw_menu :: proc() {
 	rl.ClearBackground({25, 25, 20, 255})
 	rl.DrawText("Echo Escape", (game_width / 2) - 300, 10, 90, rl.GREEN)
-	rl.DrawText("Start Game", (game_width / 2) - 300, 140, 90, rl.GREEN)
-	rl.DrawText("(Press Enter)", (game_width / 2) - 200, 230, 30, rl.GREEN)
+	rl.DrawText("Can you survive the time loop?", (game_width / 2) - 200, 100, 30, rl.GREEN)
+	rl.DrawText("Start Game", (game_width / 2) - 260, 240, 90, rl.GREEN)
+	rl.DrawText("(Press Enter)", (game_width / 2) - 100, 330, 30, rl.GREEN)
 	rl.DrawText("For better user interface press z", 20, 530, 20, rl.GREEN)
 	rl.DrawText("An Andrew Shearer Game", 750, 530, 20, rl.GREEN)
 }
 
-draw_game :: proc() {
+draw_game :: proc(delta_t: f32) {
 	/*
 	camera_pos := camera.position
 	rl.SetShaderValue(
@@ -259,6 +260,30 @@ draw_game :: proc() {
 			}
 			for g in gems {
 				rl.DrawSphere(g.pos, g.radius, rl.RED)
+			}
+			if bomb_out {
+				rl.DrawSphere(bomb_pos, bomb_radius, rl.GRAY)
+			}
+			if loopgun_show_cooldown > 0 {
+				loopgun_show_cooldown -= delta_t
+				rings := loopgun_rings()
+				if rings >= 1 {
+
+					rl.DrawSphereWires(player.pos, loopgun_radius_1, 13, 13, rl.WHITE)
+				}
+				if rings >= 2 {
+
+					rl.DrawSphereWires(player.pos, loopgun_radius_2, 15, 15, rl.WHITE)
+				}
+				if rings >= 3 {
+
+					rl.DrawSphereWires(player.pos, loopgun_radius_3, 20, 20, rl.WHITE)
+				}
+			}
+			if everywhere_on_cooldown > 0 {
+				everywhere_on_cooldown -= delta_t
+				everywhere_size += 130 * delta_t
+				rl.DrawSphereWires(player.pos, everywhere_size, 10, 10, rl.WHITE)
 			}
 		}
 		rl.EndShaderMode()

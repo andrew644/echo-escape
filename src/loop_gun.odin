@@ -5,11 +5,14 @@ import rl "vendor:raylib"
 loopgun_cooldown_max: f32 = 3
 loopgun_cooldown: f32 = loopgun_cooldown_max
 
-loopgun_thickness: f32 : 1
+loopgun_thickness: f32 : 2
 loopgun_damage: i32 : 10
-loopgun_radius_1: f32 : 5
-loopgun_radius_2: f32 : 10
-loopgun_radius_3: f32 : 15
+loopgun_radius_1: f32 : 10
+loopgun_radius_2: f32 : 15
+loopgun_radius_3: f32 : 17
+
+loopgun_show_cooldown_max: f32 = 0.15
+loopgun_show_cooldown: f32 = 0
 
 process_loopgun :: proc(delta_t: f32) {
 	if upgrades[UpgradeType.Loop_Gun] <= 0 {
@@ -19,6 +22,9 @@ process_loopgun :: proc(delta_t: f32) {
 	loopgun_cooldown -= delta_t
 	if loopgun_cooldown <= 0 {
 		loopgun_cooldown = loopgun_cooldown_max
+		if loopgun_show_cooldown <= 0 {
+			loopgun_show_cooldown = loopgun_show_cooldown_max
+		}
 
 		rings := loopgun_rings()
 		for &e in enemies {

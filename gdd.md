@@ -6,28 +6,34 @@ When you die, loop back to the beginning and spend your crystals
 You can spend crystals in the run to temporarily upgrade at cheaper prices
 
 
-#TODO next
-bomb gun
-loop gun
-everywhere gun
+#TODO
+boss bar
+draw boss
 
 damage numbers
 
 
 upgrades cost money
 
-#TODO
+dying
+
+winning screen
+
+perm upgrade menu
+
 enemy types
-gem types
-draw boss
 
 
-#TODO last
 sfx
-music
-enemies push eachother
+
 shaders / effects
-damage numbers
+
+music
+
+enemies push eachother
+
 reroll : costs money
 
-main menu - sound
+main menu - sound option
+
+gem types
