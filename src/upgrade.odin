@@ -28,7 +28,13 @@ init_upgrades :: proc() {
 	for u in UpgradeType {
 		append(&upgrade_shuffle, u)
 	}
-	generate_upgrade()
+
+	//put inital upgrades here
+	upgrade_shuffle[0] = .Cross_Gun
+	upgrade_shuffle[3] = .Move_Speed
+	upgrade_shuffle[2] = .Bomb_Gun
+	upgrade_shuffle[5] = .Max_Health
+
 
 	perm_upgrade_cost[UpgradeType.Move_Speed] = 70
 	perm_upgrade_cost[UpgradeType.Health_Regen] = 20
@@ -98,7 +104,7 @@ has_money :: proc(i: i32) -> bool {
 }
 
 money_color :: proc(i: i32) -> rl.Color {
-	if has_money(0) {
+	if has_money(i) {
 		return rl.GREEN
 	} else {
 		return rl.GRAY
@@ -110,7 +116,7 @@ has_money_perm :: proc(i: i32) -> bool {
 }
 
 money_color_perm :: proc(i: i32) -> rl.Color {
-	if has_money_perm(0) {
+	if has_money_perm(i) {
 		return rl.GREEN
 	} else {
 		return rl.GRAY

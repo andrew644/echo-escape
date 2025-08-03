@@ -11,19 +11,20 @@ level: i32 = 1
 time_per_level: f32 : 60
 level_timer: f32 = time_per_level
 
+perm_upgrade_timer: f32 = 0
+
 die_timer: f32 = die_timer_max
 die_timer_max: f32 = 4
 
 game_width :: 1024
 game_height :: 576
 
-
 checked_tab: bool = false
 
 run: bool
 camera: rl.Camera
 player: Player
-scene: Scene = .Perm_Upgrade
+scene: Scene = .Menu
 
 joke_timer: f32 = 1
 
@@ -76,7 +77,7 @@ start_run :: proc() {
 	set_player_pos(player_pos_start)
 
 	player.health = 100
-	player.gems = 2000
+	player.gems = 0
 
 	level_timer = time_per_level
 
@@ -139,27 +140,32 @@ update :: proc() {
 		}
 	case .Perm_Upgrade:
 		draw(delta_t)
-		if rl.IsKeyPressed(.ONE) && has_money_perm(0) {
-			upgrade_selected_perm(0)
-		} else if rl.IsKeyPressed(.TWO) && has_money_perm(1) {
-			upgrade_selected_perm(1)
-		} else if rl.IsKeyPressed(.THREE) && has_money_perm(2) {
-			upgrade_selected_perm(2)
-		} else if rl.IsKeyPressed(.FOUR) && has_money_perm(3) {
-			upgrade_selected_perm(3)
-		} else if rl.IsKeyPressed(.FIVE) && has_money_perm(4) {
-			upgrade_selected_perm(4)
-		} else if rl.IsKeyPressed(.SIX) && has_money_perm(5) {
-			upgrade_selected_perm(5)
-		} else if rl.IsKeyPressed(.SEVEN) && has_money_perm(6) {
-			upgrade_selected_perm(6)
-		} else if rl.IsKeyPressed(.EIGHT) && has_money_perm(7) {
-			upgrade_selected_perm(7)
-		} else if rl.IsKeyPressed(.NINE) && has_money_perm(8) {
-			upgrade_selected_perm(8)
-		} else if rl.IsKeyDown(.ENTER) {
+		if rl.IsKeyDown(.ENTER) {
 			start_run()
 			scene = .Game
+		}
+		if perm_upgrade_timer > 0 {
+			perm_upgrade_timer -= delta_t
+		} else {
+			if rl.IsKeyDown(.ONE) && has_money_perm(0) {
+				upgrade_selected_perm(0)
+			} else if rl.IsKeyDown(.TWO) && has_money_perm(1) {
+				upgrade_selected_perm(1)
+			} else if rl.IsKeyDown(.THREE) && has_money_perm(2) {
+				upgrade_selected_perm(2)
+			} else if rl.IsKeyDown(.FOUR) && has_money_perm(3) {
+				upgrade_selected_perm(3)
+			} else if rl.IsKeyDown(.FIVE) && has_money_perm(4) {
+				upgrade_selected_perm(4)
+			} else if rl.IsKeyDown(.SIX) && has_money_perm(5) {
+				upgrade_selected_perm(5)
+			} else if rl.IsKeyDown(.SEVEN) && has_money_perm(6) {
+				upgrade_selected_perm(6)
+			} else if rl.IsKeyDown(.EIGHT) && has_money_perm(7) {
+				upgrade_selected_perm(7)
+			} else if rl.IsKeyDown(.NINE) && has_money_perm(8) {
+				upgrade_selected_perm(8)
+			}
 		}
 	case .Joke:
 		joke_timer -= delta_t
@@ -198,6 +204,7 @@ upgrade_selected_perm :: proc(i: i32) {
 	}
 	perm_upgrades[upgrade] += 1
 	player.gems -= perm_upgrade_cost[upgrade]
+	perm_upgrade_timer = 0.5
 }
 
 draw :: proc(delta_t: f32) {
@@ -238,13 +245,18 @@ draw :: proc(delta_t: f32) {
 
 draw_perm_upgrade_menu :: proc() {
 	rl.ClearBackground(rl.BLACK)
-	rl.DrawText("Permanent Upgrade Time!", 370, 20, 40, rl.GREEN)
-	rl.DrawText("Press '1, 2, 3, ... 9, 0 to upgrade", 70, 90, 20, rl.GREEN)
+	rl.DrawText("Permanent Upgrade Time!", 270, 20, 40, rl.GREEN)
+	rl.DrawText("Press 1, 2, 3, ... 9 to upgrade", 70, 90, 20, rl.GREEN)
 	rl.DrawRectangle(60, 120, 494, 340, rl.DARKGREEN)
 
 	for u, i in UpgradeType {
 		draw_perm_upgrade(u, i32(140 + (i * 30)))
 	}
+
+	buf_gem: [32]u8
+	strconv.itoa(buf_gem[:], int(player.gems))
+	rl.DrawText("Ð:", 10, 20, 40, rl.GREEN)
+	rl.DrawText(cstring(raw_data(buf_gem[:])), 55, 20, 40, rl.GREEN)
 
 	rl.DrawText("No Money? Press Enter to skip!", 260, 470, 30, rl.GREEN)
 }
@@ -439,6 +451,8 @@ draw_game :: proc(delta_t: f32) {
 
 draw_upgrade :: proc() {
 	buf: [32]u8
+	buf2: [32]u8
+	buf3: [32]u8
 	rl.DrawRectangle(50, 100, game_width - 100, game_height - 150, rl.BLACK)
 	rl.DrawText("Upgrade Time", 370, 120, 40, rl.GREEN)
 	rl.DrawText("Press '1'", 70, 190, 20, rl.GREEN)
@@ -455,12 +469,12 @@ draw_upgrade :: proc() {
 	rl.DrawText("Ð", 70, 330, 20, money_color(0))
 	rl.DrawText(cstring(raw_data(buf[:])), 87, 330, 20, money_color(0))
 
-	strconv.itoa(buf[:], int(upgrade_cost[upgrade_shuffle[1]]))
-	rl.DrawText(cstring(raw_data(buf[:])), 391, 330, 20, money_color(1))
+	strconv.itoa(buf2[:], int(upgrade_cost[upgrade_shuffle[1]]))
+	rl.DrawText(cstring(raw_data(buf2[:])), 391, 330, 20, money_color(1))
 	rl.DrawText("Ð", 374, 330, 20, money_color(1))
 
-	strconv.itoa(buf[:], int(upgrade_cost[upgrade_shuffle[2]]))
-	rl.DrawText(cstring(raw_data(buf[:])), 695, 330, 20, money_color(2))
+	strconv.itoa(buf3[:], int(upgrade_cost[upgrade_shuffle[2]]))
+	rl.DrawText(cstring(raw_data(buf3[:])), 695, 330, 20, money_color(2))
 	rl.DrawText("Ð", 678, 330, 20, money_color(2))
 
 	rl.DrawText("No Money? Press Enter to skip!", 260, 470, 30, rl.GREEN)
@@ -526,11 +540,12 @@ process_level_timer :: proc(delta_t: f32) {
 	}
 
 	level += 1
-	remove_gems()
 	if level == 10 {
 		spawn_boss()
 	}
 	scene = .Upgrade
-	generate_upgrade()
+	if level > 2 {
+		generate_upgrade()
+	}
 	level_timer = time_per_level
 }

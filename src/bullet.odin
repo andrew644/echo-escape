@@ -106,6 +106,8 @@ spawn_dot :: proc() {
 		dot_direction_vec = rl.Vector3({-1, 0, 0})
 	case 3:
 		dot_direction_vec = rl.Vector3({0, 0, -1})
+		// run this semi often
+		remove_gems()
 	}
 	dot_direction += 1
 

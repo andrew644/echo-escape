@@ -14,7 +14,6 @@ spawn_timer: f32 = 0
 cube_enemy_radius: f32 : 0.5
 
 boss_alive: bool = false
-boss: Enemy
 
 EnemyType :: enum {
 	Box,
@@ -124,7 +123,7 @@ spawn_enemy_r :: proc(type: EnemyType, distance_from_player: f32) {
 	case .Big_Box:
 		radius = 1
 	case .Cap:
-		radius = 3
+		radius = 2
 	case .Boss:
 		radius = 7
 	}
@@ -217,11 +216,6 @@ enemy_player_collision :: proc() {
 }
 
 remove_dead_enemies :: proc() {
-	//Boss
-	if boss_alive && boss.health <= 0 {
-		scene = .Win
-	}
-
 	enemies_to_remove := make(map[int]int, context.temp_allocator)
 
 	for e, index in enemies {
@@ -229,6 +223,10 @@ remove_dead_enemies :: proc() {
 		if e.health <= 0 {
 			enemies_to_remove[index] = index
 			spawn_gem(e.pos, .Red)
+			if e.type == .Boss {
+				scene = .Win
+			}
+
 		}
 		//remove enemies that are too far away
 		if rl.Vector2Distance(e.pos.xz, player.pos.xz) > 200 {
@@ -273,5 +271,4 @@ spawn_boss :: proc() {
 	boss_alive = true
 
 	append(&enemies, e)
-	boss = e
 }
