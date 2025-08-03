@@ -60,5 +60,5 @@ get_bomb_damage :: proc() -> i32 {
 		return 120
 	}
 
-	return 0
+	return 120
 }

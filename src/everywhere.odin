@@ -37,7 +37,7 @@ get_everywhere_damage :: proc() -> i32 {
 	case 2:
 		return 5
 	case 3:
-		return 10
+		return 9
 	}
 
 	return 1

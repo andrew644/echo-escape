@@ -195,6 +195,9 @@ update :: proc() {
 upgrade_selected :: proc(i: i32) {
 	upgrade: UpgradeType = upgrade_shuffle[i]
 	upgrades[upgrade] += 1
+	if upgrades[upgrade] > 3 {
+		upgrades[upgrade] = 3
+	}
 	player.gems -= upgrade_cost[upgrade]
 	rl.PlaySound(sound_coin)
 	if upgrades[upgrade] >= 3 {

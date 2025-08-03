@@ -40,7 +40,7 @@ get_cross_upgrade :: proc() -> f32 {
 		return 0.8
 	}
 
-	return 0
+	return 0.8
 }
 
 process_bullets :: proc(delta_t: f32) {

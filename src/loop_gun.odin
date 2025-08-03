@@ -78,5 +78,5 @@ loopgun_rings :: proc() -> i32 {
 		return 3
 	}
 
-	return 0
+	return 3
 }

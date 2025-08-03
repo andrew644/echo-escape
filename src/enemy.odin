@@ -230,7 +230,7 @@ remove_dead_enemies :: proc() {
 
 		}
 		//remove enemies that are too far away
-		if rl.Vector2Distance(e.pos.xz, player.pos.xz) > 200 {
+		if rl.Vector2Distance(e.pos.xz, player.pos.xz) > 200 && e.type != .Boss {
 			enemies_to_remove[index] = index
 		}
 	}
