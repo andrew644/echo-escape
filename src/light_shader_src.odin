@@ -63,143 +63,56 @@ void main()
 `
 vshader_src :: `
 #version 100
-
-// Input vertex attributes
 attribute vec3 vertexPosition;
-attribute vec2 vertexTexCoord;
 attribute vec3 vertexNormal;
-attribute vec4 vertexColor;
 
-// Input uniform values
+uniform mat4 model;
 uniform mat4 mvp;
-uniform mat4 matModel;
 
-// Output vertex attributes (to fragment shader)
-varying vec3 fragPosition;
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
 varying vec3 fragNormal;
+varying vec3 fragPosition;
 
-// NOTE: Add your custom variables here
-
-// https://github.com/glslify/glsl-inverse
-mat3 inverse(mat3 m)
-{
-  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
-  float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
-  float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];
-
-  float b01 = a22*a11 - a12*a21;
-  float b11 = -a22*a10 + a12*a20;
-  float b21 = a21*a10 - a11*a20;
-
-  float det = a00*b01 + a01*b11 + a02*b21;
-
-  return mat3(b01, (-a22*a01 + a02*a21), (a12*a01 - a02*a11),
-              b11, (a22*a00 - a02*a20), (-a12*a00 + a02*a10),
-              b21, (-a21*a00 + a01*a20), (a11*a00 - a01*a10))/det;
-}
-
-// https://github.com/glslify/glsl-transpose
-mat3 transpose(mat3 m)
-{
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
-
-void main()
-{
-    // Send vertex attributes to fragment shader
-    fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
-
-    mat3 normalMatrix = transpose(inverse(mat3(matModel)));
-    fragNormal = normalize(normalMatrix*vertexNormal);
-
-    // Calculate final vertex position
-    gl_Position = mvp*vec4(vertexPosition, 1.0);
+void main() {
+    vec4 worldPos = model * vec4(vertexPosition, 1.0);
+    fragPosition = worldPos.xyz;
+    fragNormal = mat3(model) * vertexNormal;
+    gl_Position = mvp * vec4(vertexPosition, 1.0);
 }
 `
 
 
 fshader_src :: `
 #version 100
-
 precision mediump float;
 
-// Input vertex attributes (from vertex shader)
-varying vec3 fragPosition;
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
 varying vec3 fragNormal;
+varying vec3 fragPosition;
 
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add your custom variables here
-
-#define     MAX_LIGHTS              4
-#define     LIGHT_DIRECTIONAL       0
-#define     LIGHT_POINT             1
-
-struct Light {
-    int enabled;
-    int type;
-    vec3 position;
-    vec3 target;
-    vec4 color;
-};
-
-// Input lighting values
-uniform Light lights[MAX_LIGHTS];
-uniform vec4 ambient;
-uniform vec3 viewPos;
-
-void main()
-{
-    // Texel color fetching from texture sampler
-    vec4 texelColor = texture2D(texture0, fragTexCoord);
-    vec3 lightDot = vec3(0.0);
+void main() {
     vec3 normal = normalize(fragNormal);
-    vec3 viewD = normalize(viewPos - fragPosition);
-    vec3 specular = vec3(0.0);
 
-    vec4 tint = colDiffuse * fragColor;
+    // Hardcoded light properties
+    vec3 lightDir = normalize(vec3(-0.5, -1.0, -0.3));
+    vec3 viewPos = vec3(4.0, 4.0, 4.0); // assumed camera position
+    vec3 lightColor = vec3(1.0, 1.0, 1.0);
+    vec3 objectColor = vec3(0.3, 1.0, 0.5);
 
-    // NOTE: Implement here your fragment shader code
+    // Ambient
+    float ambientStrength = 0.2;
+    vec3 ambient = ambientStrength * lightColor;
 
-    for (int i = 0; i < MAX_LIGHTS; i++)
-    {
-        if (lights[i].enabled == 1)
-        {
-            vec3 light = vec3(0.0);
+    // Diffuse
+    float diff = max(dot(normal, -lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
 
-            if (lights[i].type == LIGHT_DIRECTIONAL)
-            {
-                light = -normalize(lights[i].target - lights[i].position);
-            }
+    // Specular
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(viewPos - fragPosition);
+    vec3 reflectDir = reflect(lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
+    vec3 specular = specularStrength * spec * lightColor;
 
-            if (lights[i].type == LIGHT_POINT)
-            {
-                light = normalize(lights[i].position - fragPosition);
-            }
-
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
-
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
-        }
-    }
-
-    vec4 finalColor = (texelColor*((tint + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0);
-
-    // Gamma correction
-    gl_FragColor = pow(finalColor, vec4(1.0/2.2));
+    vec3 result = (ambient + diffuse + specular) * objectColor;
+    gl_FragColor = vec4(result, 1.0);
 }
 `
