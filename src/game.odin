@@ -59,6 +59,9 @@ init :: proc() {
 
 	load_shader()
 
+	load_sound()
+
+
 	init_upgrades()
 	start_run()
 }
@@ -101,6 +104,8 @@ start_run :: proc() {
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
 	spawn_enemy(.Box)
+
+	rl.PlaySound(sound_start)
 }
 
 update :: proc() {
@@ -191,6 +196,7 @@ upgrade_selected :: proc(i: i32) {
 	upgrade: UpgradeType = upgrade_shuffle[i]
 	upgrades[upgrade] += 1
 	player.gems -= upgrade_cost[upgrade]
+	rl.PlaySound(sound_coin)
 	if upgrades[upgrade] >= 3 {
 		remove_upgrade(upgrade)
 	}
@@ -205,6 +211,7 @@ upgrade_selected_perm :: proc(i: i32) {
 	perm_upgrades[upgrade] += 1
 	player.gems -= perm_upgrade_cost[upgrade]
 	perm_upgrade_timer = 0.5
+	rl.PlaySound(sound_coin)
 }
 
 draw :: proc(delta_t: f32) {
@@ -236,8 +243,8 @@ draw :: proc(delta_t: f32) {
 			rl.DrawText("Looping Back...", (game_width / 2) - 300, 10, 90, rl.GREEN)
 		case .Win:
 			rl.ClearBackground(rl.BLACK)
-			rl.DrawText("Loop Escaped!", (game_width / 2) - 300, 10, 90, rl.GREEN)
-			rl.DrawText("Thanks for playing", (game_width / 2) - 300, 210, 70, rl.GREEN)
+			rl.DrawText("Loop Escaped!", (game_width / 2) - 330, 100, 90, rl.GREEN)
+			rl.DrawText("Thanks for playing", (game_width / 2) - 350, 310, 70, rl.GREEN)
 		}
 	}
 	rl.EndDrawing()
@@ -435,7 +442,6 @@ draw_game :: proc(delta_t: f32) {
 	}
 	rl.EndMode3D()
 
-	rl.DrawFPS(900, 10)
 	buf: [32]u8
 	strconv.itoa(buf[:], int(player.health))
 	rl.DrawText("Health:", 10, 10, 40, rl.GREEN)
@@ -506,6 +512,17 @@ controls :: proc(delta_t: f32) {
 }
 
 set_player_pos :: proc(pos: rl.Vector3) {
+	pos := pos
+	if pos.x > 350 {
+		pos.x = 350
+	} else if pos.x < -350 {
+		pos.x = -350
+	}
+	if pos.z > 350 {
+		pos.z = 350
+	} else if pos.z < -350 {
+		pos.z = -350
+	}
 	camera.position = camera_pos_offset + pos
 	camera.target = pos
 	player.pos = pos

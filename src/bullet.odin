@@ -1,5 +1,6 @@
 package game
 
+import "core:math/rand"
 import "core:slice"
 import rl "vendor:raylib"
 
@@ -109,6 +110,18 @@ spawn_dot :: proc() {
 		// run this semi often
 		remove_gems()
 	}
+
+	r_sound := rand.int31() % 4
+	switch r_sound {
+	case 0:
+		rl.PlaySound(sound_cross1)
+	case 1:
+		rl.PlaySound(sound_cross2)
+	case 2:
+		rl.PlaySound(sound_cross3)
+	case 3:
+		rl.PlaySound(sound_cross4)
+	}
 	dot_direction += 1
 
 	b: Bullet
@@ -120,4 +133,5 @@ spawn_dot :: proc() {
 	b.type = .Dot
 
 	append(&bullets, b)
+
 }

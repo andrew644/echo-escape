@@ -47,6 +47,7 @@ process_gems :: proc() {
 		if collision {
 			gems_to_remove[index] = index
 			player.gems += g.points * get_gem_bonus()
+			rl.PlaySound(sound_gem)
 		}
 	}
 

@@ -1,5 +1,6 @@
 package game
 
+import rl "vendor:raylib"
 
 everywhere_cooldown_max: f32 = 5
 everywhere_cooldown: f32 = everywhere_cooldown_max
@@ -16,6 +17,7 @@ process_everywhere :: proc(delta_t: f32) {
 
 	everywhere_cooldown -= delta_t
 	if everywhere_cooldown <= 0 {
+		rl.PlaySound(sound_everywhere)
 		everywhere_cooldown = everywhere_cooldown_max
 		everywhere_on_cooldown = everywhere_on_cooldown_max
 		everywhere_size = 0

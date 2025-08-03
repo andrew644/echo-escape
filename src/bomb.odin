@@ -25,6 +25,7 @@ process_bomb :: proc(delta_t: f32) {
 
 		bomb_out = true
 		bomb_pos = player.pos + rl.Vector3({0.5, 0, 0})
+		rl.PlaySound(sound_bombp)
 	}
 
 	if bomb_out {
@@ -41,6 +42,8 @@ process_bomb :: proc(delta_t: f32) {
 			b.damage = get_bomb_damage()
 			b.type = .Dot
 			append(&bullets, b)
+
+			rl.PlaySound(sound_bombe)
 		}
 	}
 }

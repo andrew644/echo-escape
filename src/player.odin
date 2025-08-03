@@ -1,5 +1,7 @@
 package game
 
+import rl "vendor:raylib"
+
 player_regen_timer: f32 = 5
 player_regen_timer_max: f32 : 5
 
@@ -65,5 +67,6 @@ check_die :: proc() {
 	if player.health <= 0 {
 		scene = .Die
 		die_timer = die_timer_max
+		rl.PlaySound(sound_die)
 	}
 }

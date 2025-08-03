@@ -211,6 +211,7 @@ enemy_player_collision :: proc() {
 		if collision {
 			player.health -= e.attack
 			e.attack_cooldown = enemy_attack_cooldown
+			rl.PlaySound(sound_player_hit)
 		}
 	}
 }
@@ -242,6 +243,10 @@ remove_dead_enemies :: proc() {
 	slice.reverse_sort(sorted_remove[:])
 	for r in sorted_remove {
 		unordered_remove(&enemies, r)
+	}
+
+	if len(enemies_to_remove) > 0 {
+		rl.PlaySound(sound_en_die)
 	}
 }
 

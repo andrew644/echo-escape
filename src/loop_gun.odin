@@ -21,6 +21,7 @@ process_loopgun :: proc(delta_t: f32) {
 
 	loopgun_cooldown -= delta_t
 	if loopgun_cooldown <= 0 {
+		rl.PlaySound(sound_loop)
 		loopgun_cooldown = loopgun_cooldown_max
 		if loopgun_show_cooldown <= 0 {
 			loopgun_show_cooldown = loopgun_show_cooldown_max
