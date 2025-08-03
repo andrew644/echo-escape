@@ -347,10 +347,6 @@ draw_menu :: proc() {
 }
 
 draw_game :: proc(delta_t: f32) {
-	model_matrix := rl.Matrix(1)
-	mvp := rl.GetCameraMatrix(camera) * model_matrix
-	rl.SetShaderValueMatrix(shader, rl.GetShaderLocation(shader, "mvp"), mvp)
-	rl.SetShaderValueMatrix(shader, rl.GetShaderLocation(shader, "model"), model_matrix)
 	/*
 	camera_pos := camera.position
 	rl.SetShaderValue(
